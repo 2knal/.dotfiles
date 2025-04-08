@@ -39,6 +39,7 @@ return {
 
           map("n", "<space>hr", gitsigns.reset_hunk)
           map("n", "<space>hp", gitsigns.preview_hunk)
+          map("n", "<space>hb", gitsigns.blame)
         end,
       })
     end,

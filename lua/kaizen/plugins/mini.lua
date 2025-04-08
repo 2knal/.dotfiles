@@ -7,6 +7,8 @@ return {
 
       local icons = require("mini.icons")
       icons.setup()
+
+      vim.opt.statusline:append("%p%%")
     end,
   },
 }

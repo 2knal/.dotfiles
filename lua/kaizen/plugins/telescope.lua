@@ -12,9 +12,54 @@ return {
     },
     config = function()
       local builtin = require("telescope.builtin")
+      local custom_search_path = nil
+
+      local function find_files_with_path()
+        builtin.find_files({
+          prompt_title = (
+            custom_search_path and ("Search Files in " .. vim.fn.fnamemodify(custom_search_path, ":~"))
+            or "Search Files"
+          ) .. " (Ctrl-s: Set Dir, Ctrl-b: Clear Dir)",
+          cwd = custom_search_path,
+          attach_mappings = function(prompt_bufnr, _)
+            local actions = require("telescope.actions")
+            local action_state = require("telescope.actions.state")
+
+            vim.keymap.set("i", "<C-s>", function()
+              actions.close(prompt_bufnr)
+
+              builtin.find_files({
+                attach_mappings = function(dir_prompt_bufnr)
+                  actions.select_default:replace(function()
+                    local selection = action_state.get_selected_entry()
+                    actions.close(dir_prompt_bufnr)
+                    if selection then
+                      custom_search_path = vim.fn.fnamemodify(selection.path, ":p:h")
+                      vim.notify("Search path set to " .. custom_search_path)
+                      find_files_with_path()
+                    end
+                  end)
+                  return true
+                end,
+                prompt_title = "Search directory for search scope (select any file in target directory)",
+              })
+            end, { buffer = prompt_bufnr })
+
+            vim.keymap.set("i", "<C-b>", function()
+              custom_search_path = nil
+              vim.notify("Search path cleared")
+              actions.close(prompt_bufnr)
+              find_files_with_path()
+            end, { buffer = prompt_bufnr })
+
+            return true
+          end,
+        })
+      end
+
       vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "[S]earch [H]elp" })
       vim.keymap.set("n", "<leader>sk", builtin.keymaps, { desc = "[S]earch [K]eymaps" })
-      vim.keymap.set("n", "<leader>sf", builtin.find_files, { desc = "[S]earch [F]iles" })
+      vim.keymap.set("n", "<leader>sf", find_files_with_path, { desc = "[S]earch [F]iles" })
       vim.keymap.set("n", "<leader>sF", builtin.git_files, { desc = "[S]earch [G]it [F]iles" })
       vim.keymap.set("n", "<leader>ss", builtin.builtin, { desc = "[S]earch [S]elect Telescope" })
       vim.keymap.set("n", "<leader>sw", builtin.grep_string, { desc = "[S]earch current [W]ord" })
@@ -37,14 +82,28 @@ return {
       require("telescope").setup({
         defaults = {
           file_ignore_patterns = { "node_modules" },
+          generic_sorter = function(opts)
+            local sorter = require("telescope.sorters").get_generic_fuzzy_sorter(opts)
+            -- Modify generic sorter to prioritize subsequence matches
+            sorter.scoring_function = function(_, prompt, line)
+              local score = vim.fn.matchstrpos(line:lower(), prompt:lower())
+              if score[1] == -1 then
+                return 999999
+              end
+              return score[2]
+            end
+            return sorter
+          end,
           mappings = {
             i = {
               -- Map `<C-t>` to open the selected file in a new tab
               ["<C-t>"] = actions.file_tab,
+              ["<C-h>"] = actions.select_vertical,
             },
             n = {
               -- Map `<C-t>` to open the selected file in a new tab (in normal mode)
               ["<C-t>"] = actions.file_tab,
+              ["<C-h>"] = actions.select_vertical,
             },
           },
         },
