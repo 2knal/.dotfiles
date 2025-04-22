@@ -9,6 +9,10 @@ return {
       { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
       "nvim-tree/nvim-web-devicons",
       "nvim-telescope/telescope-ui-select.nvim",
+      {
+        "nvim-telescope/telescope-live-grep-args.nvim",
+        version = "^1.0.0",
+      },
     },
     config = function()
       local builtin = require("telescope.builtin")
@@ -63,7 +67,12 @@ return {
       vim.keymap.set("n", "<leader>sF", builtin.git_files, { desc = "[S]earch [G]it [F]iles" })
       vim.keymap.set("n", "<leader>ss", builtin.builtin, { desc = "[S]earch [S]elect Telescope" })
       vim.keymap.set("n", "<leader>sw", builtin.grep_string, { desc = "[S]earch current [W]ord" })
-      vim.keymap.set("n", "<leader>sg", builtin.live_grep, { desc = "[S]earch by [G]rep" })
+      vim.keymap.set(
+        "n",
+        "<leader>sg",
+        ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>",
+        { desc = "[S]earch by [G]rep" }
+      )
       vim.keymap.set("n", "<leader>sd", function()
         builtin.diagnostics({ bufnr = 0 })
       end, { desc = "[S]earch current file [d]iagnostics" })
@@ -116,6 +125,7 @@ return {
       -- To get ui-select loaded and working with telescope, you need to call
       -- load_extension, somewhere after setup function:
       require("telescope").load_extension("ui-select")
+      require("telescope").load_extension("live_grep_args")
     end,
   },
 }

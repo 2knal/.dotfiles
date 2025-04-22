@@ -2,6 +2,15 @@ return {
   {
     "rmagatti/auto-session",
     lazy = false,
-    opts = {},
+    ---enables autocomplete for opts
+    ---@module "auto-session"
+    ---@type AutoSession.Config
+    opts = {
+      session_lens = {
+        mappings = {
+          delete_session = { "n", "<C-b>" },
+        },
+      },
+    },
   },
 }

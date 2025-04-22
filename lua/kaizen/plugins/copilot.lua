@@ -6,6 +6,7 @@ return {
       { "github/copilot.vim" },
       { "nvim-lua/plenary.nvim", branch = "master" },
     },
+    build = "make tiktoken",
     opts = {
       show_help = true,
       model = "claude-3.5-sonnet",
